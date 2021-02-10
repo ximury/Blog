@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+</head>
+<body>
+    <div style="width: 500px; height: 500px; margin: auto; border: solid 2px red">
+        <span>你的登录账号为：{{session.get('username')}}</span><br/>
+        <span>这边文章的标题是：{{article.title}}</span><br/>
+        <span>文章的阅读次数为：{{article.count+1}}</span>
+        <br/>
+
+        {% if count %2==0 %}
+        <span>count可以被2整除{{count}}</span>
+        {%else%}
+        <span>count不可以被2整除{{count}}</span>
+        {% endif %}
+
+        <br/>
+        <!--loop值为浮点型数值-->
+        {% set loop = count/10 %}
+        <!--jinjia2默认不能调用python函数 -->
+        {# <!--{% set intloop= int(loop) %}--> #}
+        {% set intloop = loop | int %}
+
+        {% for i in range(intloop) %}
+        <span>循环 {{i}} </span><br/>
+        {% endfor %}
+
+        <!--   jinja过滤器，| 后代表的是过滤器的名字     -->
+        <!--safe 原样输出内容-->
+        <span><br/>{{content | safe}}</span>
+        <span><br/>{{content | length}}</span>
+        <span><br/>{{content |safe | truncate(5) }}</span><hr/>
+
+        {#<!--{{type}}-->#}
+
+        {# 方案一在jinja2.py中 #}
+        {{mytype1}}<br/>
+        {{mytype1['2']}}
+        {# 方案二在main.py中 #}
+        {# {{mytype2()}}<br/><br/><hr/> #}
+        {# {{mytype2()['2']}}<br/><br/> #}
+
+        <!--   自定义过滤器     -->
+        <span><br/><br/>文章长度为：{{content | mylen}}</span>
+    </div>
+</body>
+</html>
