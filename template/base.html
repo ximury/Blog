@@ -11,6 +11,7 @@
     <link rel="stylesheet" type="text/css"
           href="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/4.4.1/css/bootstrap.min.css">
     <script src="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/4.4.1/js/bootstrap.min.js"></script>
+    <script src="https://cdn.bootcdn.net/ajax/libs/bootbox.js/5.5.2/bootbox.min.js"></script>
 
     <link rel="stylesheet" href="/css/custom.css" type="text/css"/>
     <!--为了更好地兼容移动设备，使用CSS媒体查询功能-->
@@ -44,9 +45,12 @@
             </button>
             <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
                 <div class="navbar-nav">
-                    <a class="nav-item nav-link" href="/type/1-1">Java开发</a>
-                    <a class="nav-item nav-link" href="/type/2-1">Python开发</a>
-                    <a class="nav-item nav-link" href="/type/3-1">Golang开发</a>
+<!--                    <a class="nav-item nav-link" href="/type/1-1">Java开发</a>-->
+<!--                    <a class="nav-item nav-link" href="/type/2-1">Python开发</a>-->
+<!--                    <a class="nav-item nav-link" href="/type/3-1">Golang开发</a>-->
+                    {% for k, v in article_type.items() %}
+                    <a class="nav-item nav-link" href="/type/{{k}}-1">{{v}}</a>
+                    {% endfor %}
                 </div>
                 <div class="navbar-nav ml-auto">
                     <a class="nav-item nav-link" href="#" data-toggle="modal" data-target="#mymodal">登录</a>

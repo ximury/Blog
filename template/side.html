@@ -1,34 +1,158 @@
+<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
         <div class="col-sm-3 col-12" style="border: none; padding: 0px; padding-left: 5px; padding-top: 15px">
             <div class="col-12 search-bar row">
                 <div class="col-8">
-                    <input type="text" class="form-control" id="keyword" placeholder="请输入关键字"/>
+                    <input type="text" class="form-control" id="keyword" onkeyup="doSearch(event)" placeholder="请输入关键字"/>
                 </div>
                 <div class="col-4">
-                    <button type="button" class="btn btn-primary">搜索</button>
+                    <button type="button" class="btn btn-primary" onclick="doSearch(null)">搜索</button>
                 </div>
             </div>
             <div class="col-12 side">
                 <div class="col-12 tip">
                     最新文章
                 </div>
-                <ul>
-                    <li><a href="#">1. web开发测试一</a></li>
-                    <li><a href="#">2. web开发测试一</a></li>
-                    <li><a href="#">3. web开发测试一</a></li>
-                    <li><a href="#">4. web开发测试一</a></li>
-                    <li><a href="#">5. web开发测试一</a></li>
+                <ul id="last">
+                    <li v-for="(article,index) in content">
+                        <a v-bind:href="'/article/'+article[0]">${index+1}. ${article[1].substr(0, 12)}...</a>
+<!--                        <a v-bind:href="'/article/'+article[0]">${index+1}. ${truncate(article[1], 12)}</a>-->
+                    </li>
                 </ul>
             </div>
             <div class="col-12 side">
                 <div class="col-12 tip">
                     最多阅读
                 </div>
-                <ul>
-                    <li><a href="#">1. web开发测试一</a></li>
-                    <li><a href="#">2. web开发测试一</a></li>
-                    <li><a href="#">3. web开发测试一</a></li>
-                    <li><a href="#">4. web开发测试一</a></li>
-                    <li><a href="#">5. web开发测试一</a></li>
+                <ul id="most">
+                    <li v-for="(article,index) in content">
+                        <a v-bind:href="'/article/'+article[0]">${index+1}. ${article[1].substr(0, 12)}...</a>
+                    </li>
                 </ul>
             </div>
+            <div class="col-12 side" id="fixedmenu">
+                <div class="col-12 tip">
+                    特别推荐
+                </div>
+                <ul id="recommended">
+                    <li v-for="(article,index) in content">
+                        <a v-bind:href="'/article/'+article[0]">${index+1}. ${article[1].substr(0, 12)}...</a>
+                    </li>
+                </ul>
+                <div class="col-12 side" style="background-color: #3276b1; color:white; padding-top:5px;
+                     padding-bottom:5px; text-align: center; cursor: pointer;" onclick="gotoTop()">
+                    回到顶部
+                </div>
+            </div>
         </div>
+
+<script type="text/javascript">
+    function doSearch(e) {
+        if(e!=null && e.keyCode!=13){
+            //13代表回车
+            return false
+        }
+        var keyword = $.trim($("#keyword").val());
+        if (keyword.length==0||keyword.length>10||keyword.indexOf('%')>=0){
+            // window.alert('你搜索的关键字不合法');
+            bootbox.alert({'title':'BUG提示', 'message':'你输入的关键字不合法'});
+            $('#keyword').focus();
+            return false
+        }
+        location.href='/search/1-'+keyword
+    }
+
+    //利用JS来截取字符串,中文1个,英文0,5个
+    function truncate(headline, length){
+        var count = 0;
+        var output = '';
+        for (var i in headline){
+            output += headline.charAt(i);
+            var code = headline.charCodeAt(i);
+            if(code<=128){
+                count+=0.5
+            }
+            else{
+                count+=1;
+            }
+            if(count>length){
+                break;
+            }
+        }
+        if (headline.length<16){
+            return output
+        }
+        return output+'...'
+    }
+
+
+    //ready自动触发响应最新文章等推荐(不需要按钮或事件触发)
+    //window.load=function(){}
+    // 使用VUE渲染侧边栏
+    $(document).ready(function () {
+        //第一步：发送ajax请求去访问/recommend接口，获取json
+        $.get('/recommend', function (data) {
+            //获取响应，并动态填充到对应的推荐栏中
+            var lastData = data[0]
+            var mostData = data[1]
+            var recommendedData = data[2]
+            var v1 = new Vue({
+                el:'#last', //绑定的元素不能与v-for同级，最好上级
+                data:{content:lastData},
+                delimiters: ['${','}']  //里面自定义
+            });
+            var v2 = new Vue({
+                el:'#most', //绑定的元素不能与v-for同级，最好上级
+                data:{content:mostData},
+                delimiters: ['${','}']  //里面自定义
+            });
+            var v3 = new Vue({
+                el:'#recommended', //绑定的元素不能与v-for同级，最好上级
+                data:{content:recommendedData},
+                delimiters: ['${','}']  //里面自定义
+            });
+        })
+    });
+
+    //如果没有正常悬浮停靠，查看一下浏览器打印的userAgentInfo，或者直接查看浏览器设置的 User agent
+    // 很可能是设置成了android模式，然后修改成PC端的模式即可
+    $(document).ready(function () {
+        //利用浏览器的user-agent属性判断浏览器的类型
+        var userAgentInfo=navigator.userAgent.toLowerCase();
+        console.log("userAgentInfo: "+userAgentInfo)
+        var agents = ["android", "iphone", "symbianOS", "windows phone", "ipad", "ipod"];
+        var flag = true;   //表示是PC端
+        console.log(flag+"777")
+        for(var v=0;v < agents.length; v++){
+            //表示是移动端
+            if(userAgentInfo.indexOf(agents[v]) >= 0){
+                console.log("agents[v]: "+agents[v])
+                flag = false;
+                break;
+            }
+        }
+        console.log(flag+"888")
+        //PC端时才进行右侧停靠
+        if(flag===true){
+            var fixedDiv = document.getElementById("fixedmenu");
+            var H = 0;
+            var Y= fixedDiv;
+            while (Y){
+                H += Y.offsetTop;
+                Y = Y.offsetParent;
+            }
+            window.onscroll=function () {
+                var s = document.body.scrollTop||document.documentElement.scrollTop;
+                if(s > H+500){
+                    fixedDiv.style = "position:fixed; top:0; margin-top:0; width:306px;";
+                }else {
+                    fixedDiv.style = "";
+                }
+            }
+        }
+    });
+    //回到顶部
+    function gotoTop() {
+        $('html, body').animate({scrollTop:0}, 800);
+        return false;
+    }
+</script>

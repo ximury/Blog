@@ -1,0 +1,57 @@
+        <div class="col-sm-3 col-12" style="border: none; padding: 0px; padding-left: 5px; padding-top: 15px">
+            <div class="col-12 search-bar row">
+                <div class="col-8">
+                    <input type="text" class="form-control" id="keyword" onkeyup="doSearch(event)" placeholder="请输入关键字"/>
+                </div>
+                <div class="col-4">
+                    <button type="button" class="btn btn-primary" onclick="doSearch(null)">搜索</button>
+                </div>
+            </div>
+            <div class="col-12 side">
+                <div class="col-12 tip">
+                    最新文章
+                </div>
+                <ul>
+                    {% for row in last %}
+                    <li><a href="/article/{{row.articleid}}">{{loop.index}}. {{row.headline | truncate(12) }}</a></li>
+                    {% endfor %}
+                </ul>
+            </div>
+            <div class="col-12 side">
+                <div class="col-12 tip">
+                    最多阅读
+                </div>
+                <ul>
+                    {% for row in most %}
+                    <li><a href="/article/{{row.articleid}}">{{loop.index}}. {{row.headline | mytruncate(12) }}</a></li>
+                    {% endfor %}
+                </ul>
+            </div>
+            <div class="col-12 side">
+                <div class="col-12 tip">
+                    特别推荐
+                </div>
+                <ul>
+                    {% for row in recommended %}
+                    <li><a href="/article/{{row.articleid}}">{{loop.index}}. {{row.headline | truncate(12) }}</a></li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+
+<script type="text/javascript">
+    function doSearch(e) {
+        if(e!=null && e.keyCode!=13){
+            //13代表回车
+            return false
+        }
+        var keyword = $.trim($("#keyword").val());
+        if (keyword.length==0||keyword.length>10||keyword.indexOf('%')>=0){
+            // window.alert('你搜索的关键字不合法');
+            bootbox.alert({'title':'BUG提示', 'message':'你输入的关键字不合法'});
+            $('#keyword').focus();
+            return false
+        }
+        location.href='/search/1-'+keyword
+    }
+</script>
