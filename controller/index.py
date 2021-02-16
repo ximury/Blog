@@ -1,14 +1,28 @@
 import math
 
-from flask import Blueprint, render_template, abort, jsonify
+from flask import Blueprint, render_template, abort, jsonify, session, request
 
 from module.article import Article
+from module.user import User
 
 index = Blueprint('index', __name__)
 
 
 @index.route('/')
 def home():
+    if session.get('islogin') is None:
+        username = request.cookies.get('username')
+        password = request.cookies.get('password')
+        if username!=None and password!=None:
+            user = User()
+            result = user.find_by_username(username)
+            if len(result) == 1 and result[0].password == password:
+                session['islogin'] = 'true'
+                session['userid'] = result[0].userid
+                session['username'] = username
+                session['nickname'] = result[0].nickname
+                session['role'] = result[0].role
+
     article = Article()
     result = article.find_limit_with_user(0, 10)
     # print(result, end='---------------\n')

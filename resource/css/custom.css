@@ -117,34 +117,59 @@ body {
 .article-detail .title {
     font-size: 24px;
     color: #e56244;
+    margin-bottom: 30px;
 }
 
 .article-detail .favorite {
     text-align: right;
-    font-weight: bold;
+    /*font-weight: bold;*/
 }
 
 .article-detail .info {
-    margin-top: 10px;
-    color: #666666;
+    /*margin-top: 10px;*/
+    /*color: #666666;*/
+    /*font-size: 14px;*/
+    /*border-bottom: solid 1px green;*/
+    /*line-height: 60px;*/
     font-size: 14px;
-    border-bottom: solid 1px green;
-    line-height: 60px;
+    color: #666666;
+    padding-bottom: 20px;
+    border-bottom: solid 1px #cccccc;
+    margin-bottom: 20px;
 }
 
 .article-detail .content {
     margin-top: 30px;
 }
 
-.article-nav {
-    margin-top: 20px;
-    border: solid 1px #cccccc;
+.article-detail .readall {
+    margin: 20px 0px;
+    text-align: center;
 }
 
-.article-nav div {
-    height: 40px;
-    line-height: 40px;
+.article-detail .readall button{
+    height: 45px;
+    background-color: #337ab7;
+    border: 0;
+    border-radius: 5px;
+    color: white;
+    font-weight: bold;
 }
+
+.article-nav {
+    /*margin-top: 20px;*/
+    /*border: solid 1px #cccccc;*/
+    border: solid 1px #cccccc;
+    margin: 10px 0px;
+    background-color: whitesmoke;
+    padding: 10px 10px 10px 20px;
+    line-height: 35px;
+}
+
+/*.article-nav div {*/
+/*    height: 40px;*/
+/*    line-height: 40px;*/
+/*}*/
 
 /*文章评论*/
 .article-comment {

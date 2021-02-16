@@ -100,39 +100,39 @@
                 </div>
                 {% endif %}
 
-                {% for comment in comment_list %}
-                <div class="col-12 list row" style="margin-bottom: 5px">
+                {% for comment, user in comment_user %}
+                <div class="col-12 list row">
                     <div class="col-2 icon">
-                        <img src="/img/avatar/{{comment.avatar}}" class="img-fluid" style="width: 70px;" alt=""/>
+                        <img src="/img/avatar/{{user.avatar}}" class="img-fluid" style="width: 70px;" alt=""/>
                     </div>
-                    <div class="col-10 comment" style="padding: 0px">
+                    <div class="col-10 comment">
                         <div class="col-12 row" style="padding: 0px;">
-                            <div class="col-5 commenter" style="color: red;">
-                                {% if comment.nickname!=None and comment.nickname!='' %} {{comment.nickname}}
-                                {% else %}{{comment.username}}{% endif %}&nbsp;&nbsp;&nbsp;{{comment.createtime}}
+                            <div class="col-5 commenter" style="color: red">
+                                {% if user.nickname!=None and user.nickname!='' %} {{user.nickname}}
+                                {% else %}{{user.username}}{% endif %}&nbsp;&nbsp;&nbsp;{{comment.createtime}}
                             </div>
-                            <div class="col-7 reply" style="text-align: right; padding-right: 0px">
+                            <div class="col-7 reply" style="text-align: right">
                                 <!--文章作者，管理员，评论者本人只能对评论信息回复和隐藏，不能点赞-->
                                 {% if article.userid==session.get('userid') or session.get('role')=='admin' or
                                 comment['userid']==session.get('userid') %}
                                 <label onclick="gotoReply('{{comment.commentid}}')">
                                     <span aria-hidden="true">
                                         <img src="/img/icon/reply.png" width="25" height="25" alt=""/>
-                                    </span> 回复
+                                    </span> 回复 (<span>25</span>)
                                 </label>&nbsp;&nbsp;&nbsp;
                                 <label onclick="hideComment(this, '{{comment.commentid}}')">
                                     <span aria-hidden="true">
                                         <img src="/img/icon/hide.png" width="25" height="25" alt=""/>
-                                    </span> 隐藏
-                                </label>
+                                    </span> 隐藏 (<span>15</span>)
+                                </label>&nbsp;&nbsp;&nbsp;
                                 <!--其他用户只能回复和点赞，不能隐藏-->
-                                {# 如果需要设计匿名用户不能点赞，继续判断是否是登陆状态即可 #}
+                                {# 如果需要设计匿名用不能点赞，继续判断是否是登陆状态即可 #}
                                 {% elif session.get('islogin')==None %}
                                 {% else %}
                                 <label onclick="gotoReply('{{comment.commentid}}')">
                                     <span aria-hidden="true">
                                         <img src="/img/icon/reply.png" width="25" height="25" alt=""/>
-                                    </span> 回复
+                                    </span> 回复 (<span>25</span>)
                                 </label>&nbsp;&nbsp;&nbsp;
                                 <label onclick="agreeComment(this, '{{comment.commentid}}')">
                                     <span class="oi oi-chevron-bottom" aria-hidden="true"></span> 赞成 (<span>15</span>)
@@ -141,72 +141,15 @@
                                     <span aria-hidden="true">
                                         <img src="/img/icon/oppose.png" width="25" height="25" alt=""/>
                                     </span> 反对 (<span>15</span>)
-                                </label>
+                                </label>&nbsp;&nbsp;&nbsp;
                                 {% endif %}
                             </div>
                         </div>
-                        <div class="col-12" style="padding-left: 0px">
+                        <div class="col-12 content">
                             {{comment.content}}
                         </div>
                     </div>
                 </div>
-
-                {% if comment['reply_list'] %}
-                {% for reply in comment['reply_list'] %}
-                <div class="col-12 list row" style="margin-top: 2px">
-                    <div class="col-2 icon" style="text-align: center">
-                        <img src="/img/avatar/{{reply.avatar}}" class="img-fluid" style="width: 45px;" alt=""/>
-                    </div>
-                    <div class="col-10 comment" style="border: solid 1px #ccc; padding-right: 0px">
-                        <div class="col-12 row" style="padding-left: 0px; padding-right: 0px">
-                            <div class="col-5 commenter" style="color: #337ab7">
-                                {#
-                                {% if reply.nickname!=None and reply.nickname!='' %} {{reply.nickname}}
-                                {% else %}{{reply.username}}{% endif %}&nbsp;&nbsp;&nbsp;{{reply.createtime}}
-                                #}
-                                {{reply.nickname}}&nbsp;回复&nbsp;{{comment.nickname}}
-                                &nbsp;&nbsp;{{reply.createtime | subdate}}
-                            </div>
-                            <div class="col-7 reply" style="text-align: right; padding-right: 0px">
-                                <!--文章作者，管理员，评论者本人只能对评论信息回复和隐藏，不能点赞-->
-                                {% if article.userid==session.get('userid') or session.get('role')=='admin' or
-                                reply['userid']==session.get('userid') %}
-                                <label onclick="gotoReply('{{reply.commentid}}')">
-                                    <span aria-hidden="true">
-                                        <img src="/img/icon/reply.png" width="25" height="25" alt=""/>
-                                    </span> 回复
-                                </label>&nbsp;&nbsp;&nbsp;
-                                <label onclick="hideComment(this, '{{reply.commentid}}')">
-                                    <span aria-hidden="true">
-                                        <img src="/img/icon/hide.png" width="25" height="25" alt=""/>
-                                    </span> 隐藏
-                                </label>
-                                {% elif session.get('islogin')==None %}
-                                {% else %}
-                                <label onclick="gotoReply('{{reply.commentid}}')">
-                                    <span aria-hidden="true">
-                                        <img src="/img/icon/reply.png" width="25" height="25" alt=""/>
-                                    </span> 回复
-                                </label>&nbsp;&nbsp;&nbsp;
-                                <label onclick="agreeComment(this, '{{reply.commentid}}')">
-                                    <span class="oi oi-chevron-bottom" aria-hidden="true"></span> 赞成 (<span>15</span>)
-                                </label>&nbsp;&nbsp;&nbsp;
-                                <label onclick="opposeComment(this, '{{reply.commentid}}')">
-                                    <span aria-hidden="true">
-                                        <img src="/img/icon/oppose.png" width="25" height="25" alt=""/>
-                                    </span> 反对 (<span>15</span>)
-                                </label>
-                                {% endif %}
-                            </div>
-                        </div>
-                        <div class="col-12" style="padding-left: 0px">
-                            {{reply.content}}
-                        </div>
-                    </div>
-                </div>
-
-                {% endfor %}
-                {% endif %}
                 {% endfor %}
             </div>
         </div>

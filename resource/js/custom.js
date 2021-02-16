@@ -60,16 +60,17 @@ function doLogin(e) {
         return false;
     }
 
-    loginname = $.trim($("#loginname").val());
-    loginpass = $.trim($("#loginpass").val());
-    logincode = $.trim($("#logincode").val());
-    if (regname.length < 5 || regpass.length < 5) {
-        bootbox.alert({title:"错误提示", message:"用户名和密码少于5位."});
+    //注意加 var,如果不加，就变成全局变量了
+    var loginname = $.trim($("#loginname").val());
+    var loginpass = $.trim($("#loginpass").val());
+    var logincode = $.trim($("#logincode").val());
+    if (loginname.length < 5 || loginpass.length < 5) {
+        bootbox.alert({title:"错误提示", message:"用户名或密码少于5位."});
         return false;
     }
     else {
         // 构建POST请求的正文数据
-        param = "username=" + loginname;
+        var param = "username=" + loginname;
         param += "&password=" + loginpass;
         param += "&vcode=" + logincode;
         // 利用jQuery框架发送POST请求，并获取到后台登录接口的响应内容
@@ -120,21 +121,44 @@ function doSendMail(obj) {
     });
 }
 
+// 如果页面提示找不到此函数，清空一下浏览器缓存
+function doSendMailForPwd(obj) {
+    var email = $.trim($("#username").val());
+    // 使用正则表达式验证邮箱地址格式是否正确
+    if (!email.match(/.+@.+\..+/)) {
+        bootbox.alert({title:"错误提示", message:"邮箱地址格式不正确."});
+        $("#username").focus();
+        return false;
+    }
+    $(obj).attr('disabled', true);     // 发送邮件按钮变成不可用
+    $.post('/ecode', 'email=' + email, function (data) {
+        if (data == 'send-pass') {
+            bootbox.alert({title:"信息提示", message:"邮箱验证码已成功发送，请查收."});
+            $("#username").attr('disabled', true);   // 验证码发送完成后禁止修改注册邮箱
+            return false;
+        }
+        else {
+            bootbox.alert({title:"错误提示", message:"邮箱验证码未发送成功."});
+            return false;
+        }
+    });
+}
+
 function doReg(e) {
     if (e != null && e.keyCode != 13) {
         return false;
     }
 
-    regname = $.trim($("#regname").val());
-    regpass = $.trim($("#regpass").val());
-    regcode = $.trim($("#regcode").val());
+    var regname = $.trim($("#regname").val());
+    var regpass = $.trim($("#regpass").val());
+    var regcode = $.trim($("#regcode").val());
     if (!regname.match(/.+@.+\..+/) || regpass.length < 6) {
         bootbox.alert({title:"错误提示", message:"注册邮箱不正确或密码少于5位."});
         return false;
     }
     else {
         // 构建POST请求的正文数据
-        param = "username=" + regname;
+        var param = "username=" + regname;
         param += "&password=" + regpass;
         param += "&ecode=" + regcode;
         // 利用jQuery框架发送POST请求，并获取到后台注册接口的响应内容
@@ -163,6 +187,52 @@ function doReg(e) {
         });
     }
 }
+
+function doReset(e) {
+    if (e != null && e.keyCode != 13) {
+        return false;
+    }
+
+    var username = $.trim($("#username").val());
+    var newpass = $.trim($("#newpass").val());
+    var findcode = $.trim($("#findcode").val());
+    console.log(username)
+    if (!username.match(/.+@.+\..+/)) {
+        bootbox.alert({title:"错误提示", message:"注册邮箱不正确."});
+        return false;
+    }
+    else if(newpass.length < 6){
+        bootbox.alert({title:"错误提示", message:"新密码少于5位."});
+        return false;
+    }
+    else {
+        // 构建POST请求的正文数据
+        var param = "username=" + username;
+        param += "&password=" + newpass;
+        param += "&ecode=" + findcode;
+        // 利用jQuery框架发送POST请求，并获取到后台修改密码接口的响应内容
+        $.post('/user/updatepwd', param, function (data) {
+            if (data == "ecode-error") {
+                bootbox.alert({title:"错误提示", message:"验证码无效."});
+                $("#regcode").val('');  // 清除验证码框的值
+                $("#regcode").focus();   // 让验证码框获取到焦点供用户输入
+            }
+            else if (data == "updatepwd-pass") {
+                bootbox.alert({title:"信息提示", message:"恭喜你，修改密码成功."});
+                // 注册成功后，延迟1秒钟重新刷新当前页面即可
+                setTimeout('location.reload();', 1000);
+            }
+            else if (data == "updatepwd-fail") {
+                bootbox.alert({title:"错误提示", message:"修改密码失败，请联系管理员."});
+            }
+            else {
+                // 如果是其他信息，则极有可能是验证器响应的内容
+                bootbox.alert({title:"错误提示", message: data});
+            }
+        });
+    }
+}
+
 
 // $(document).ready()是指页面加载即运行该代码
 // $(document).ready(function () {

@@ -15,7 +15,9 @@ class Article(DBase):
 
     # 根据id查询文章
     def find_by_id(self, articleid):
-        row = dbsession.query(Article).filter_by(articleid=articleid).all()
+        row = dbsession.query(Article, User.nickname).join(User, User.userid == Article.userid) \
+            .filter(Article.hidden == 0, Article.drafted == 0, Article.checked == 1,
+                    Article.articleid == articleid).first()
         return row
 
     # 指定分页的limit和offset，同时与用户表做连接查询
@@ -64,22 +66,22 @@ class Article(DBase):
 
     # 最新文章[(id,headline),(id,headline)]
     def find_last_9(self):
-        result=dbsession.query(Article.articleid, Article.headline) \
+        result = dbsession.query(Article.articleid, Article.headline) \
             .filter(Article.hidden == 0, Article.drafted == 0, Article.checked == 1) \
             .order_by(Article.articleid.desc()).limit(9).all()
         return result
 
     # 最多阅读
     def find_most_9(self):
-        result=dbsession.query(Article.articleid, Article.headline) \
+        result = dbsession.query(Article.articleid, Article.headline) \
             .filter(Article.hidden == 0, Article.drafted == 0, Article.checked == 1) \
             .order_by(Article.readcount.desc()).limit(9).all()
         return result
 
     # 特别推荐,如果超过9篇，可以考虑 order by rand() 随机显示9篇
     def find_recommended_9(self):
-        result=dbsession.query(Article.articleid, Article.headline) \
-            .filter(Article.hidden == 0, Article.drafted == 0, Article.checked == 1, Article.recommended==1) \
+        result = dbsession.query(Article.articleid, Article.headline) \
+            .filter(Article.hidden == 0, Article.drafted == 0, Article.checked == 1, Article.recommended == 1) \
             .order_by(func.rand()).limit(9).all()
         return result
 
@@ -89,3 +91,47 @@ class Article(DBase):
         most = self.find_most_9()
         recommended = self.find_recommended_9()
         return last, most, recommended
+
+    # 每阅读一次，文章阅读次数加一
+    def update_read_count(self, articleid):
+        article = dbsession.query(Article).filter_by(articleid=articleid).first()
+        article.readcount += 1
+        dbsession.commit()
+
+    # 根据文章编号查询文章标题
+    def find_headline_by_id(self, articleid):
+        row = dbsession.query(Article.headline).filter_by(articleid=articleid).first()
+        return row.headline
+
+    # 获取当前文章的上一篇和下一篇
+    def find_prev_next_by_id(self, articleid):
+        dict = {}
+
+        # 查询比当前文章id小的当中最大的一个
+        row = dbsession.query(Article).filter(Article.hidden == 0, Article.drafted == 0, Article.checked == 1,
+                                              Article.articleid < articleid).order_by(Article.articleid.desc()).limit(
+            1).first()
+        # 如果当前文章已经是第一篇，上一篇也是当前文章
+        if row is None:
+            prev_id = articleid
+        else:
+            prev_id = row.articleid
+        dict['prev_id'] = prev_id
+        dict['prev_headline'] = self.find_headline_by_id(prev_id)
+        # 查询比当前文章id大的当中最小的一个
+        row = dbsession.query(Article).filter(Article.hidden == 0, Article.drafted == 0, Article.checked == 1,
+                                              Article.articleid > articleid).order_by(Article.articleid).limit(
+            1).first()
+        if row is None:
+            next_id = articleid
+        else:
+            next_id = row.articleid
+        dict['next_id'] = next_id
+        dict['next_headline'] = self.find_headline_by_id(next_id)
+        return dict
+
+    # 当发表或回复评论后，为文章表字段replycount加1
+    def update_replycount(self, articleid):
+        row = dbsession.query(Article).filter_by(articleid=articleid).first()
+        row.replycount += 1
+        dbsession.commit()
