@@ -1,3 +1,5 @@
+import math
+
 from flask import Blueprint, abort, render_template, request
 
 from module.article import Article
@@ -44,18 +46,31 @@ def read(articleid):
     prev_next = Article().find_prev_next_by_id(articleid)
 
     # 显示当前文章评论信息
-    # comment_user = Comment().find_limit_with_user(articleid, 0, 50)
+    comment_user = Comment().find_limit_with_user(articleid, 0, 50)
 
     # 对应新的模板文件——article-base.html
-    comment_list = Comment().get_comment_user_list(articleid, 0, 50)
-    # print(comment_list)
+    comment_list = Comment().get_comment_user_list(articleid, 0, 10)
+
+    # 原始评论总页数
+    count = Comment().get_count_by_article(articleid)
+    total = math.ceil(count/10)
 
     # return render_template('article-base.html', result=result)
+    # 评论有分页，回复已做好，最终模样，点赞、反对、隐藏 功能俱全
     return render_template('article-base.html', article=dict, position=position, payed=payed,
-                           is_favorited=is_favorited, prev_next=prev_next, comment_list=comment_list)
+                           is_favorited=is_favorited, prev_next=prev_next, comment_list=comment_list,
+                           total=total)
+
+    # 评论无分页，回复与评论并列
     # return render_template('article-base-jinja2.html', article=dict, position=position, payed=payed,
     #                        is_favorited=is_favorited, prev_next=prev_next, comment_user=comment_user)
-
+    # 评论无分页，但回复已做好，在对应评论下，点赞、反对 数量显示功能具备
+    # return render_template('article-base-reply.html', article=dict, position=position, payed=payed,
+    #                        is_favorited=is_favorited, prev_next=prev_next, comment_list=comment_list)
+    # jquery方式未成功实现，存在BUG
+    # return render_template('article-base-jquery.html', article=dict, position=position, payed=payed,
+    #                        is_favorited=is_favorited, prev_next=prev_next, comment_list=comment_list,
+    #                        total=total)
 @article.route('/readall', methods=['POST'])
 def read_all():
     position = int(request.form.get('position'))
@@ -71,3 +86,7 @@ def read_all():
         # 减少用户表的剩余积分
         User().update_credit(credit=-1 * result[0].credit)
     return content
+
+@article.route('/prepost')
+def add_article():
+    return render_template('publish.html')

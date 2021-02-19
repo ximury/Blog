@@ -142,4 +142,12 @@ if __name__ == '__main__':
     from controller.comment import *
 
     app.register_blueprint(comment)
+
+    from controller.opinion import *
+
+    app.register_blueprint(opinion)
+
+    from controller.ueditor import *
+    app.register_blueprint(ueditor)
+
     app.run(debug=True)

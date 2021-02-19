@@ -1,4 +1,4 @@
-from flask import Blueprint, request, session
+from flask import Blueprint, request, session, jsonify
 
 from module.article import Article
 from module.comment import Comment
@@ -65,3 +65,20 @@ def reply():
             return 'reply-fail'
     else:
         return 'reply-limit'
+
+# 为了使用Ajax分页，特创建此接口作为演示
+# 由于分页栏已经完成渲染，此接口仅根据前端的页码请求后台的对应数据
+@comment.route('/comment/<int:articleid>-<int:page>')
+def comment_page(articleid,page):
+    start = (page-1)*10
+    comment = Comment()
+    list = comment.get_comment_user_list(articleid, start, 10)
+    return jsonify(list)
+
+@comment.route('/comment/<int:commentid>', methods=['DELETE'])
+def comment_hide(commentid):
+    comment = Comment()
+    res = comment.hide_comment(commentid)
+    if res == 'Fail':
+        return 'hide-limit'
+    return 'hide-pass'

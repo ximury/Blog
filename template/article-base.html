@@ -1,5 +1,6 @@
 {% extends 'base.html' %}  {# 将当前页面继承至base.html母版  #}
 {% block content %}
+<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
         <div class="col-sm-9 col-12" id="left" style="padding-right: 0px">
             <div class="col-12 article-detail row">
                 <div class="col-9 title">
@@ -100,114 +101,110 @@
                 </div>
                 {% endif %}
 
-                {% for comment in comment_list %}
-                <div class="col-12 list row" style="margin-bottom: 5px">
-                    <div class="col-2 icon">
-                        <img src="/img/avatar/{{comment.avatar}}" class="img-fluid" style="width: 70px;" alt=""/>
-                    </div>
-                    <div class="col-10 comment" style="padding: 0px">
-                        <div class="col-12 row" style="padding: 0px;">
-                            <div class="col-5 commenter" style="color: red;">
-                                {% if comment.nickname!=None and comment.nickname!='' %} {{comment.nickname}}
-                                {% else %}{{comment.username}}{% endif %}&nbsp;&nbsp;&nbsp;{{comment.createtime}}
+                <div id="commentDiv">
+                    <div v-for="comment in commentList"> <!--循环标签不能与绑定元素在同一层-->
+                        <div class="col-12 list row" style="margin-bottom: 5px">
+                            <div class="col-2 icon">
+                                <img v-bind:src="'/img/avatar/'+comment['avatar']" class="img-fluid" style="width: 70px;" alt=""/>
                             </div>
-                            <div class="col-7 reply" style="text-align: right; padding-right: 0px">
-                                <!--文章作者，管理员，评论者本人只能对评论信息回复和隐藏，不能点赞-->
-                                {% if article.userid==session.get('userid') or session.get('role')=='admin' or
-                                comment['userid']==session.get('userid') %}
-                                <label onclick="gotoReply('{{comment.commentid}}')">
-                                    <span aria-hidden="true">
-                                        <img src="/img/icon/reply.png" width="25" height="25" alt=""/>
-                                    </span> 回复
-                                </label>&nbsp;&nbsp;&nbsp;
-                                <label onclick="hideComment(this, '{{comment.commentid}}')">
-                                    <span aria-hidden="true">
-                                        <img src="/img/icon/hide.png" width="25" height="25" alt=""/>
-                                    </span> 隐藏
-                                </label>
-                                <!--其他用户只能回复和点赞，不能隐藏-->
-                                {# 如果需要设计匿名用户不能点赞，继续判断是否是登陆状态即可 #}
-                                {% elif session.get('islogin')==None %}
-                                {% else %}
-                                <label onclick="gotoReply('{{comment.commentid}}')">
-                                    <span aria-hidden="true">
-                                        <img src="/img/icon/reply.png" width="25" height="25" alt=""/>
-                                    </span> 回复
-                                </label>&nbsp;&nbsp;&nbsp;
-                                <label onclick="agreeComment(this, '{{comment.commentid}}')">
-                                    <span class="oi oi-chevron-bottom" aria-hidden="true"></span> 赞成 (<span>15</span>)
-                                </label>&nbsp;&nbsp;&nbsp;
-                                <label onclick="opposeComment(this, '{{comment.commentid}}')">
-                                    <span aria-hidden="true">
-                                        <img src="/img/icon/oppose.png" width="25" height="25" alt=""/>
-                                    </span> 反对 (<span>15</span>)
-                                </label>
-                                {% endif %}
+                            <div class="col-10 comment" style="padding: 0px">
+                                <div class="col-12 row" style="padding: 0px;">
+                                    <div class="col-5 commenter" style="color: red;">
+                                        ${comment['nickname']}&nbsp;&nbsp;&nbsp;${comment['createtime']}
+                                    </div>
+                                    <div class="col-7 reply" style="text-align: right; padding-right: 0px"
+                                         v-if="'${article[\'userid\']}'=='${session.get(\'userid\')}' || '${session.get(\'role\')}'=='admin' || comment['userid']=='${session.get(\'userid\')}'">
+<!--                                         v-if="{{article['userid']}}=={{session.get('userid')}} || {{session.get('role')}}=='admin' || comment['userid']=={{session.get('userid')}}">-->
+                                        <label v-bind:onclick="'gotoReply('+ comment['commentid']+')'">
+                                            <span aria-hidden="true">
+                                                <img v-bind:src="'/img/icon/reply.png'" width="25" height="25" alt=""/>
+                                            </span> 回复
+                                        </label>&nbsp;&nbsp;&nbsp;
+                                        <label :onclick="'hideComment(this, '+ comment.commentid+')'">
+                                            <span aria-hidden="true">
+                                                <img :src="'/img/icon/hide.png'" width="25" height="25" alt=""/>
+                                            </span> 隐藏
+                                        </label>
+                                    </div>
+                                    <div class="col-7 reply" style="text-align: right; padding-right: 0px" v-else>
+                                        <label :onclick="'gotoReply(' + comment.commentid + ')'">
+                                            <span aria-hidden="true">
+                                                <img :src="'/img/icon/reply.png'" width="25" height="25" alt=""/>
+                                            </span> 回复
+                                        </label>&nbsp;&nbsp;&nbsp;
+                                        <label :onclick="'agreeComment(this, '+ comment.commentid +')'">
+                                            <span class="oi oi-chevron-bottom" aria-hidden="true">
+                                            </span> 赞成 (<span>${comment.agreecount}</span>)
+                                        </label>&nbsp;&nbsp;&nbsp;
+                                        <label :onclick="'opposeComment(this, '+comment.commentid + ')'">
+                                            <span aria-hidden="true">
+                                                <img :src="'/img/icon/oppose.png'" width="25" height="25" alt=""/>
+                                            </span> 反对 (<span>${comment.opposecount}</span>)
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="col-12" style="padding-left: 0px">
+                                    ${comment.content}
+                                </div>
                             </div>
                         </div>
-                        <div class="col-12" style="padding-left: 0px">
-                            {{comment.content}}
+
+                        <div class="col-12 list row" style="margin-top: 2px" v-show="comment.reply_list" v-for="reply in comment.reply_list">
+                            <div class="col-2 icon" style="text-align: center">
+                                <img :src="'/img/avatar/'+reply.avatar" class="img-fluid" style="width: 45px;" alt=""/>
+                            </div>
+                            <div class="col-10 comment" style="border: solid 1px #ccc; padding-right: 0px">
+                                <div class="col-12 row" style="padding-left: 0px; padding-right: 0px">
+                                    <div class="col-5 commenter" style="color: #337ab7">
+                                        ${reply.nickname}&nbsp;回复&nbsp;${comment.nickname}
+                                        &nbsp;&nbsp;${reply.createtime}
+                                    </div>
+                                    <div class="col-7 reply" style="text-align: right; padding-right: 0px"
+                                         v-if="'${article.userid}'=='${session.get(\'userid\')}' || '${session.get(\'role\')}'=='admin' || reply['userid']=='${session.get(\'userid\')}'">
+<!--                                         v-if="{{article['userid']}}=={{session.get('userid')}} || {{session.get('role')}}=='admin' || reply['userid']=={{session.get('userid')}}">-->
+                                        <label :onclick="'hideComment(this, ' + reply.commentid+ ')'">
+                                            <span aria-hidden="true">
+                                                <img :src="'/img/icon/hide.png'" width="25" height="25" alt=""/>
+                                            </span> 隐藏
+                                        </label>&nbsp;&nbsp;&nbsp;
+                                        <label :onclick="'agreeComment(this, '+ reply.commentid+ ')'">
+                                            <span class="oi oi-chevron-bottom" aria-hidden="true"></span> 赞成 (<span>${reply.agreecount}</span>)
+                                        </label>&nbsp;&nbsp;&nbsp;
+                                        <label :onclick="'opposeComment(this, '+ reply.commentid+ ')'">
+                                            <span aria-hidden="true">
+                                                <img :src="'/img/icon/oppose.png'" width="25" height="25" alt=""/>
+                                            </span> 反对 (<span>${reply.opposecount}</span>)
+                                        </label>
+                                    </div>
+                                    <div class="col-7 reply" style="text-align: right; padding-right: 0px" v-else>
+                                        <label :onclick="'agreeComment(this, '+ reply.commentid+ ')'">
+                                            <span class="oi oi-chevron-bottom" aria-hidden="true"></span> 赞成 (<span>${reply.agreecount}</span>)
+                                        </label>&nbsp;&nbsp;&nbsp;
+                                        <label :onclick="'opposeComment(this, '+ reply.commentid+ ')'">
+                                            <span aria-hidden="true">
+                                                <img :src="'/img/icon/oppose.png'" width="25" height="25" alt=""/>
+                                            </span> 反对 (<span>${reply.opposecount}</span>)
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="col-12" style="padding-left: 0px">
+                                    回复内容：${reply.content}
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                {% if comment['reply_list'] %}
-                {% for reply in comment['reply_list'] %}
-                <div class="col-12 list row" style="margin-top: 2px">
-                    <div class="col-2 icon" style="text-align: center">
-                        <img src="/img/avatar/{{reply.avatar}}" class="img-fluid" style="width: 45px;" alt=""/>
-                    </div>
-                    <div class="col-10 comment" style="border: solid 1px #ccc; padding-right: 0px">
-                        <div class="col-12 row" style="padding-left: 0px; padding-right: 0px">
-                            <div class="col-5 commenter" style="color: #337ab7">
-                                {#
-                                {% if reply.nickname!=None and reply.nickname!='' %} {{reply.nickname}}
-                                {% else %}{{reply.username}}{% endif %}&nbsp;&nbsp;&nbsp;{{reply.createtime}}
-                                #}
-                                {{reply.nickname}}&nbsp;回复&nbsp;{{comment.nickname}}
-                                &nbsp;&nbsp;{{reply.createtime | subdate}}
-                            </div>
-                            <div class="col-7 reply" style="text-align: right; padding-right: 0px">
-                                <!--文章作者，管理员，评论者本人只能对评论信息回复和隐藏，不能点赞-->
-                                {% if article.userid==session.get('userid') or session.get('role')=='admin' or
-                                reply['userid']==session.get('userid') %}
-                                <label onclick="gotoReply('{{reply.commentid}}')">
-                                    <span aria-hidden="true">
-                                        <img src="/img/icon/reply.png" width="25" height="25" alt=""/>
-                                    </span> 回复
-                                </label>&nbsp;&nbsp;&nbsp;
-                                <label onclick="hideComment(this, '{{reply.commentid}}')">
-                                    <span aria-hidden="true">
-                                        <img src="/img/icon/hide.png" width="25" height="25" alt=""/>
-                                    </span> 隐藏
-                                </label>
-                                {% elif session.get('islogin')==None %}
-                                {% else %}
-                                <label onclick="gotoReply('{{reply.commentid}}')">
-                                    <span aria-hidden="true">
-                                        <img src="/img/icon/reply.png" width="25" height="25" alt=""/>
-                                    </span> 回复
-                                </label>&nbsp;&nbsp;&nbsp;
-                                <label onclick="agreeComment(this, '{{reply.commentid}}')">
-                                    <span class="oi oi-chevron-bottom" aria-hidden="true"></span> 赞成 (<span>15</span>)
-                                </label>&nbsp;&nbsp;&nbsp;
-                                <label onclick="opposeComment(this, '{{reply.commentid}}')">
-                                    <span aria-hidden="true">
-                                        <img src="/img/icon/oppose.png" width="25" height="25" alt=""/>
-                                    </span> 反对 (<span>15</span>)
-                                </label>
-                                {% endif %}
-                            </div>
-                        </div>
-                        <div class="col-12" style="padding-left: 0px">
-                            {{reply.content}}
-                        </div>
-                    </div>
+                <!--由于使用ajax进行分页，分页导航时不能再使用超链接-->
+                {% if total>1 %}
+                <div class="col-12 paginate">
+                    <label onclick="gotoPage('{{article.articleid}}','prev')">上一页</label>&nbsp;&nbsp;
+                    {% for i in range(total) %}
+                    <label onclick="gotoPage('{{article.articleid}}', '{{i+1}}')">{{i+1}}</label>&nbsp;&nbsp;
+                    {% endfor %}
+                    <label onclick="gotoPage('{{article.articleid}}', 'next')">下一页</label>
                 </div>
-
-                {% endfor %}
                 {% endif %}
-                {% endfor %}
             </div>
         </div>
     {% include 'side.html' %}
@@ -320,5 +317,89 @@
             }
         });
     }
+
+    //点赞 操作
+    function agreeComment(obj, commentid) {
+        var param = "type=1&commentid="+commentid;
+        $.post('/opinion', param, function (data) {
+            if(data=='opinion-pass'){
+                //获取到当前元素下的第二个span标签元素
+                var element = $(obj).children('span').eq(1);
+                //获取到赞成数量，并将其转化为整数
+                var count = parseInt(element.text());
+                element.text(count+1)
+            }
+        })
+    }
+
+    //反对 操作
+    function opposeComment(obj, commentid) {
+        var param = "type=0&commentid="+commentid;
+        $.post('/opinion', param, function (data) {
+            if(data=='opinion-pass'){
+                //获取到当前元素下的第二个span标签元素
+                var element = $(obj).children('span').eq(1);
+                //获取到赞成数量，并将其转化为整数
+                var count = parseInt(element.text());
+                element.text(count+1)
+            }
+        })
+    }
+
+    // 隐藏评论请求
+    function hideComment(obj, commentid) {
+        bootbox.confirm("你确定要隐藏这条评论吗？", function(result) {
+            if (result) {
+                $.ajax({
+                    url: '/comment/' + commentid,
+                    type: 'delete',    // 发送delete请求
+                    success: function (data) {
+                        if (data == 'hide-pass') {
+                            // 通过父类选择器找到当前评论的顶层元素，并隐藏该元素
+                            $(obj).parent().parent().parent().parent().hide();
+                        } else if (data == 'hide-limit') {
+                            bootbox.alert({title: "错误提示",
+                                message: "带回复的评论无法隐藏."});
+                        }
+                    }
+                });
+            }
+        });
+    }
+
+    var PAGE=1;   //定义全局变量用于记录前面在哪一页，默认在第一页
+    var TOTAL='{{total}}';  //定义总页数，由模板引擎先引填充
+
+    //添加gotoPage函数对应代码
+    function gotoPage(articleid,type) {
+        if(type=='prev'){
+            if(PAGE>1)
+                PAGE-=1;
+        }
+        else if(type=='next'){
+            if(PAGE<TOTAL)
+                PAGE+=1;
+        }
+        else {
+            PAGE = parseInt(type)
+        }
+        fillComment(articleid, PAGE);
+    }
+    //定义vue实例v为全局变量，只实例化一次，分页时重新绑定数据即可
+    var v = new Vue({
+        el: '#commentDiv',
+        delimiters: ['${', '}'],
+        data: {commentList:[]}
+    });
+    //填充分页评论数据，注意其中的DOM元素的拼接操作
+    function fillComment(articleid, pageid){
+        $.get('/comment/' + articleid+'-'+pageid, function (data) {
+            //此处重新为v实例赋值，不能在此处实例化Vue，否则每次都是新实例，无法渲染分页
+            v.commentList = data;
+        });
+    }
+    window.onload = function () {
+        fillComment('{{article.articleid}}', '1');
+    };
 </script>
 {% endblock %}

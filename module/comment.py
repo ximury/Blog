@@ -57,7 +57,7 @@ class Comment(DBase):
     # 查询回复评论，回复评论不需要分页
     def find_reply_with_user(self, replyid):
         result = dbsession.query(Comment, User).join(User, User.userid == Comment.userid) \
-            .filter(Comment.replyid == replyid, Comment.hidden == 0)\
+            .filter(Comment.replyid == replyid, Comment.hidden == 0) \
             .all()
         # if result:
         #     for res in result:
@@ -99,3 +99,30 @@ class Comment(DBase):
             comment['reply_list'] = model_join_list(result)
         # 将新的数据结构返回给控制器接口
         return comment_list
+
+    # 查询某篇文章原始评论的总数量
+    def get_count_by_article(self, articleid):
+        count = dbsession.query(Comment).filter_by(articleid=articleid, hidden=0, replyid=0).count()
+        return count
+
+    # 更新评论表的点赞/反对数量
+    def update_agree_oppose(self, commentid, type):
+        row = dbsession.query(Comment).filter_by(commentid=commentid).first()
+        if type == 1:  # 表示赞成
+            row.agreecount += 1
+        elif type == 0:
+            row.opposecount += 1
+        dbsession.commit()
+
+    # 隐藏评论
+    def hide_comment(self, commentid):
+        # 如果评论已经有回复，且回复未全部隐藏，则不接受隐藏操作
+        # 返回 Fail 表示不满足隐藏条件，成功返回Done
+        result = dbsession.query(Comment).filter_by(replyid=commentid, hidden=0).all()
+        if len(result) > 0:
+            return 'Fail'
+        else:
+            row = dbsession.query(Comment).filter_by(commentid=commentid).first()
+            row.hidden = 1
+            dbsession.commit()
+            return 'Done'
