@@ -1,3 +1,6 @@
+import time
+
+from flask import session
 from sqlalchemy import Table, func
 
 from common.database import dbconnect
@@ -135,3 +138,16 @@ class Article(DBase):
         row = dbsession.query(Article).filter_by(articleid=articleid).first()
         row.replycount += 1
         dbsession.commit()
+
+    # 插入一篇新文章，草稿或投稿通过参数进行区分
+    def insert_article(self, type, headline, content, thumbnail, credit, drafted=0, checked=1):
+        now = time.strftime('%Y-%m-%d %H:%M:%S')
+        userid = session.get('userid')
+        # 其他字段在数据库中均已设置默认值，无需手动插入
+        article = Article(userid=userid, type=type, headline=headline, content=content,
+                          thumbnail=thumbnail, credit=credit, drafted=drafted,
+                          checked=checked, createtime=now, updatetime=now)
+        dbsession.add(article)
+        dbsession.commit()
+
+        return article.articleid  # 将新的文章编号返回，便于前端页面跳转

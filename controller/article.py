@@ -1,7 +1,8 @@
 import math
 
-from flask import Blueprint, abort, render_template, request
+from flask import Blueprint, abort, render_template, request, session
 
+from common.utility import parse_image_url, generate_thumb
 from module.article import Article
 from module.comment import Comment
 from module.credit import Credit
@@ -88,5 +89,39 @@ def read_all():
     return content
 
 @article.route('/prepost')
-def add_article():
+def pre_post():
     return render_template('publish.html')
+
+@article.route('/article', methods=['POST'])
+def add_article():
+    headline = request.form.get('headline')
+    content = request.form.get('content')
+    type = int(request.form.get('type'))
+    credit = int(request.form.get('credit'))
+    drafted = int(request.form.get('drafted'))
+    checked = int(request.form.get('checked'))
+    print(session)
+    print(session.get('userid'))
+    if session.get('userid') is None:
+        return 'perm-denied'
+    else:
+        user = User().find_by_userid(session.get('userid'))
+        if user.role == 'editor':
+            # 权限合格，可以执行发布文章的代码
+            # 首先为文章生成缩略图，找不到则随机生成一张
+            url_list = parse_image_url(content)
+            if len(url_list) > 0:
+                thumbname = generate_thumb(url_list)
+            else:
+                thumbname = '%d.png' % type
+            try:
+                id = Article().insert_article(type=type, headline=headline, content=content, thumbnail=thumbname,
+                                              credit=credit, drafted=drafted, checked=checked)
+                return str(id)
+            except Exception as e:
+                return 'post-fail'
+        # 如果角色不是作者，则只能投稿，不能正式发布
+        elif checked == 1:
+            return 'perm-denied'
+        else:
+            return 'perm-denied'

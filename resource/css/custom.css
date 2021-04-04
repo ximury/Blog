@@ -142,6 +142,10 @@ body {
     margin-top: 30px;
 }
 
+.article-detail .content img {
+    max-width: 100%;
+}
+
 .article-detail .readall {
     margin: 20px 0px;
     text-align: center;

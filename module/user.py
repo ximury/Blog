@@ -17,6 +17,10 @@ class User(DBase):
         result = dbsession.query(User).filter_by(username=username).all()
         return result
 
+    def find_by_userid(self, userid):
+        result = dbsession.query(User).filter_by(userid=userid).first()
+        return result
+
     # 实现注册，首次注册时用户只需要输入用户名以及密码，所以只需要两个参数
     # 注册时，在模型类中为其他字段尽力生成一些可用的值，虽不全面，但可用
     # 通常用户注册时不建议填些太多资料，影响体验，可待用户后续逐步完善
