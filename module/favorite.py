@@ -4,8 +4,10 @@ from flask import session
 from sqlalchemy import Table
 
 from common.database import dbconnect
+from module.article import Article
 
 dbsession, md, DBase = dbconnect()
+
 
 class Favorite(DBase):
     __table__ = Table('favorite', md, autoload=True)
@@ -39,3 +41,19 @@ class Favorite(DBase):
             return False
         else:
             return True
+
+    # 为用户中心查询我的收藏添加数据操作方法
+    def find_my_favorite(self):
+        result = dbsession.query(Favorite).join(Article, Favorite.articleid == Article.articleid) \
+            .filter(Favorite.userid == session.get('userid')).all()
+        return result
+
+    # 切换收藏和取消收藏的状态
+    def switch_favorite(self, favoriteid):
+        row = dbsession.query(Favorite).filter_by(favoriteid=favoriteid).first()
+        if row.canceled == 1:
+            row.canceled = 0
+        else:
+            row.canceled = 1
+        dbsession.commit()
+        return row.canceled

@@ -100,6 +100,7 @@ def add_article():
     credit = int(request.form.get('credit'))
     drafted = int(request.form.get('drafted'))
     checked = int(request.form.get('checked'))
+    articleid = int(request.form.get('articleid'))
     print(session)
     print(session.get('userid'))
     if session.get('userid') is None:
@@ -114,12 +115,21 @@ def add_article():
                 thumbname = generate_thumb(url_list)
             else:
                 thumbname = '%d.png' % type
-            try:
-                id = Article().insert_article(type=type, headline=headline, content=content, thumbnail=thumbname,
-                                              credit=credit, drafted=drafted, checked=checked)
-                return str(id)
-            except Exception as e:
-                return 'post-fail'
+            article = Article()
+            if articleid == 0:
+                try:
+                    id = article.insert_article(type=type, headline=headline, content=content, thumbnail=thumbname,
+                                                  credit=credit, drafted=drafted, checked=checked)
+                    return str(id)
+                except Exception as e:
+                    return 'post-fail'
+            else:
+                try:
+                    id = article.update_article(articleid=articleid, type=type, headline=headline, content=content, thumbnail=thumbname,
+                                                  credit=credit, drafted=drafted, checked=checked)
+                    return str(id)
+                except Exception as e:
+                    return 'post-fail'
         # 如果角色不是作者，则只能投稿，不能正式发布
         elif checked == 1:
             return 'perm-denied'

@@ -151,3 +151,72 @@ class Article(DBase):
         dbsession.commit()
 
         return article.articleid  # 将新的文章编号返回，便于前端页面跳转
+
+    # 根据文章编号更新文章的内容，可用于文章编辑或草稿修改，以及基于草稿的发布
+    def update_article(self, articleid, type, headline, content, thumbnail, credit, drafted=0, checked=1):
+        now = time.strftime('%Y-%m-%d %H:%M:%S')
+        row = dbsession.query(Article).filter_by(articleid=articleid).first()
+        row.type = type
+        row.headline = headline
+        row.content = content
+        row.thumbnail = thumbnail
+        row.credit = credit
+        row.drafted = drafted
+        row.checked = checked
+        row.updatetime = now
+        dbsession.commit()
+        return articleid  # 继续将文章ID返回调用处
+
+    # 后台管理
+    def find_all_except_draft(self, start, pagesize):
+        result = dbsession.query(Article).filter(Article.drafted == 0) \
+            .order_by(Article.articleid.desc()).limit(pagesize).offset(start).all()
+        return result
+
+    def get_count_except_draft(self, ):
+        count = dbsession.query(Article).filter(Article.drafted == 0).count()
+        return count
+
+    def find_by_type_except_draft(self, start, pagesize, type):
+        result = dbsession.query(Article).filter(Article.drafted == 0,
+                                                 Article.headline.like('%' + type + '%')) \
+            .order_by(Article.articleid.desc()).limit(pagesize).offset(start).all()
+        total = dbsession.query(Article).filter(Article.drafted == 0,
+                                                Article.headline.like('%' + type + '%')) \
+            .order_by(Article.articleid.desc()).count()
+        return result, total
+
+    def find_by_headline_except_draft(self, headline):
+        result = dbsession.query(Article).filter(Article.drafted == 0,
+                                                 Article.headline.like('%' + headline + '%')) \
+            .order_by(Article.articleid.desc()).all()
+        return result
+
+    def switch_checked(self, articleid):
+        row = dbsession.query(Article).filter_by(articleid=articleid).first()
+        if row.checked == 1:
+            row.checked = 0
+        else:
+            row.checked = 1
+        dbsession.commit()
+        return row.checked
+
+    # 切换文章的隐藏状态：1表示隐藏
+    def switch_hidden(self, articleid):
+        row = dbsession.query(Article).filter_by(articleid=articleid).first()
+        if row.hidden == 1:
+            row.hidden = 0
+        else:
+            row.hidden = 1
+        dbsession.commit()
+        return row.hidden  # 将当前状态返回给控制层
+
+    # 切换文章的推荐状态：1表示推荐，0表示正常
+    def switch_recommended(self, articleid):
+        row = dbsession.query(Article).filter_by(articleid=articleid).first()
+        if row.recommended == 1:
+            row.recommended = 0
+        else:
+            row.recommended = 1
+        dbsession.commit()
+        return row.recommended
